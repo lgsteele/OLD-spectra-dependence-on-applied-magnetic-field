@@ -46,6 +46,31 @@ dBxyzArray = np.column_stack((dBxyzArray,
              np.zeros((len(dBxyzArray),8))))
 dBxyzArray[:,4] = 0
 ##print dBxyzArray
+
+
+###################################################################
+###################################################################
+# This is an aside...
+# The interesting thing is that when dealing with Bz, you get
+# two peaks at large fields... however, when dealing with Bx,
+# you get more peaks at high fields... this must have something
+# to do with the (Sx^2+Sy^2) term in the Hamiltonian???
+Bz = np.array([[0,0,1e-2],[1e-2,0,0]])
+zf = np.array([2.87e9,3e6,2e6,0])
+EV = np.zeros((len(Bz),8))
+for i in range(0,len(Bz),1):
+    EV[i,:] = eigenvalues(zf,np.array(Bz[i]))
+##    EV[i,:] = eigenvalues(zf,np.array([0,0,Bz[i]]))
+print EV
+freq = np.arange(1.87e9,3.87e9,1e6)
+amp = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
+plt.plot(freq,lor8(freq,zf,amp,EV[0]),\
+         freq,lor8(freq,zf,amp,EV[1]))
+###################################################################
+###################################################################
+###################################################################
+
+
 #calculate eigenvalues for each number of domains
 for i in range(0,len(dBxyzArray),1):
     simulatedEV = eigenvalues(zfArray[0:3],dBxyzArray[i,1:4])
