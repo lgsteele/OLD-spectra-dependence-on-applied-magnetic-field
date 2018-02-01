@@ -90,10 +90,11 @@ for i in range(0,len(Bz),1):
     EV[i,:] = eigenvalues(zf,np.array(Bz[i]))
 ##    EV[i,:] = eigenvalues(zf,np.array([0,0,Bz[i]]))
 ##print EV
-freq = np.arange(1.87e9,3.87e9,1e6)
+freq = np.arange(2.5e9,3.25e9,1e6)
 amp = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
 plt.plot(freq,lor8(freq,zf,amp,EV[0]),\
          freq,lor8(freq,zf,amp,EV[1]))
+plt.title('blue = large Bz, orange = large Bx',fontsize=15)
 ###################################################################
 ###################################################################
 ###################################################################
@@ -287,11 +288,14 @@ def domainSizeVsBx(dBxyzArray,freq,spectraArray):
     ax = fig.add_subplot(224)
     X = freq
     Y = dBxyzArray[:,1]*1e6
+##    Y = sim600um[:,1]*1e6
     X, Y = np.meshgrid(X, Y)
     Z = spectraArray[:,1:]
+##    Z = spectra600um[:,1:]
     plt.contourf(X,Y,Z,100,cmap='RdGy')
     plt.colorbar()    
     ax.set_title('NV spectra as a function of domain size (z=-1mm)')
+##    ax.set_title('NV spectra as a function of domain size (z=-0.6mm)')
     ax.set_ylabel('Domain size (um)')
     ax.set_xlabel('Frequency (Hz)')
 ##    ax.plot(domain_size,Bx)
