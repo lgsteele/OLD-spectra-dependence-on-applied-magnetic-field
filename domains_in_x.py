@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def Bdom(doms,z,n):
+    # xLength is used to define volume boundaries
     xLength = 0.001
     yLength = 0.001
     zLength = 0.001
-
     xstep = xLength/doms
     xArray = np.arange(-xLength/2+xstep/2,xLength/2,xstep)
 ##    print 'xstep = ' + str(xstep)
@@ -51,7 +51,7 @@ for i in range(0,len(doms),1):
     for j in range(0,int(doms[i]),1):
         Bsum[i,0] = doms[i]
         Bsum[i,1] = .001/doms[i]
-        Bsum[i,2:] = Bsum[i,2:] + Bdom(doms[i],-0.001,j)
+        Bsum[i,2:] = Bsum[i,2:] + Bdom(doms[i],-0.0016,j)
 
 
 
@@ -59,7 +59,7 @@ for i in range(0,len(doms),1):
 print Bsum
 
 
-np.savetxt('domain-Bx-By-Bz-array.txt',\
+np.savetxt('z_-1600um.txt',\
            Bsum, delimiter = ', ')
 
 
