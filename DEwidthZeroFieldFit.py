@@ -29,25 +29,27 @@ def de(freq,signal,zfArray): # determines D, E, and width from zero-field data
         zfArray[0],zfArray[1],zfArray[2],zfArray[3]]
     yguess = lor(freq,np.amax(signal)*7e6,np.amax(signal)*7e6,\
         zfArray[0],zfArray[1],zfArray[2],zfArray[3])
-    coeffs, matcov = curve_fit(lor, freq, signal, p0)
+    coeffs, matcov = curve_fit(lor, freq, signal, p0,\
+                    bounds=(0,3e9))
     yStdErr = np.sqrt(np.diag(matcov)) # compute standard errors of fit params
 ##    print yStdErr
     yfit = lor(freq,coeffs[0],coeffs[1],coeffs[2],\
                coeffs[3],coeffs[4],coeffs[5])
-    zfArray[0] = coeffs[2] # D
-    zfArray[1] = coeffs[3] # E
-    zfArray[2] = coeffs[4] # width
-    zfArray[3] = coeffs[5] # offset
-    zfArray[4] = yStdErr[2] # std err of D
-    zfArray[5] = yStdErr[3] # std err of E
-    zfArray[6] = yStdErr[4] # std err of width
-    zfArray[7] = yStdErr[5] # std err of offset
+    zftmp = np.copy(zfArray)
+    zftmp[0] = coeffs[2] # D
+    zftmp[1] = coeffs[3] # E
+    zftmp[2] = coeffs[4] # width
+    zftmp[3] = coeffs[5] # offset
+    zftmp[4] = yStdErr[2] # std err of D
+    zftmp[5] = yStdErr[3] # std err of E
+    zftmp[6] = yStdErr[4] # std err of width
+    zftmp[7] = yStdErr[5] # std err of offset
 ##    plt.plot(freq,signal,'r-',freq,yguess,'g-',freq,yfit,'b-')
 ##    plt.show()
 ##    yfitarray = np.column_stack([freq,yfit])
 ##    np.savetxt('NV-fitArray.txt',yfitarray,delimiter=', ',\
 ##           header='freq, data', comments='')
-    return zfArray
+    return zftmp
 ######################################
 # Fitting with Gaussian
 ######################################

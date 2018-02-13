@@ -83,18 +83,18 @@ sim400um[:,4] = 0
 # two peaks at large fields... however, when dealing with Bx,
 # you get more peaks at high fields... this must have something
 # to do with the (Sx^2+Sy^2) term in the Hamiltonian???
-Bz = np.array([[0,0,1e-2],[1e-2,0,0]])
-zf = np.array([2.87e9,3e6,2e6,0])
-EV = np.zeros((len(Bz),8))
-for i in range(0,len(Bz),1):
-    EV[i,:] = eigenvalues(zf,np.array(Bz[i]))
-##    EV[i,:] = eigenvalues(zf,np.array([0,0,Bz[i]]))
-##print EV
-freq = np.arange(2.5e9,3.25e9,1e6)
-amp = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
-plt.plot(freq,lor8(freq,zf,amp,EV[0]),\
-         freq,lor8(freq,zf,amp,EV[1]))
-plt.title('blue = large Bz, orange = large Bx',fontsize=15)
+##Bz = np.array([[0,0,1e-2],[1e-2,0,0]])
+##zf = np.array([2.87e9,3e6,2e6,0])
+##EV = np.zeros((len(Bz),8))
+##for i in range(0,len(Bz),1):
+##    EV[i,:] = eigenvalues(zf,np.array(Bz[i]))
+####    EV[i,:] = eigenvalues(zf,np.array([0,0,Bz[i]]))
+####print EV
+##freq = np.arange(2.5e9,3.25e9,1e6)
+##amp = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
+##plt.plot(freq,lor8(freq,zf,amp,EV[0]),\
+##         freq,lor8(freq,zf,amp,EV[1]))
+##plt.title('blue = large Bz, orange = large Bx',fontsize=15)
 ###################################################################
 ###################################################################
 ###################################################################
@@ -128,6 +128,24 @@ ev800um = np.delete(sim800um,(0,1,2,3),axis=1)
 ev600um = np.delete(sim600um,(0,1,2,3),axis=1)
 ev400um = np.delete(sim400um,(0,1,2,3),axis=1)
 print ev800um[0]
+
+###################################################################
+###################################################################
+###################################################################
+# Side note: spectra from 20G helmholtz coil
+##helmholtzB = np.array([0.0018,0.0018,0.0018]) # 2mT = 20G
+##helmholtzEV = eigenvalues(zfArray[0:3],helmholtzB)
+##helmholtzFreq = np.arange(2.57e9,3.17e9,1e5)
+##helmholtzAmp = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
+##helmholtzSpectra = lor8(helmholtzFreq,zfArray,\
+##                        helmholtzAmp,helmholtzEV)
+##plt.plot(helmholtzFreq,helmholtzSpectra)
+##plt.show()
+###################################################################
+###################################################################
+###################################################################
+
+
 # Generate spectra for each set of domains
 freq = np.arange(2.845e9,2.895e9,1e5)
 ampArray = np.array([1e7,1e7,1e7,1e7,1e7,1e7,1e7,1e7])
@@ -185,7 +203,9 @@ for i in range(0,len(dBxyzArray),1):
 ##print spectraArray
 ##print dBxyzArray
 EArray = np.zeros(len(spectraArray))
+EArrayErr = np.zeros(len(spectraArray))
 widthArray = np.zeros(len(spectraArray))
+widthArrayErr = np.zeros(len(spectraArray))
 E1600um = np.zeros(len(spectra1600um))
 width1600um = np.zeros(len(spectra1600um))
 E1400um = np.zeros(len(spectra1400um))
@@ -202,7 +222,9 @@ for i in range(0,len(spectraArray),1):
     zfTmp = de(freq,spectraArray[i,1:],\
                 zfArray)
     EArray[i] = zfTmp[1]
+    EArrayErr[i] = zfTmp[5] # error on E
     widthArray[i] = zfTmp[2]
+    widthArrayErr[i] = zfTmp[6] # Error on width
 #---------------------------------------------
     zf1600um = de(freq,spectra1600um[i,1:],\
                 zfArray)
@@ -224,7 +246,9 @@ for i in range(0,len(spectraArray),1):
 ##    E800um[i] = zf800um[1]
 ##    width800um[i] = zf800um[2]
 ##print E800um[0]
-
+print np.column_stack([dBxyzArray[:,1]*1e6,\
+                       EArray,EArrayErr,\
+                       widthArray,widthArrayErr])
 
 
 
