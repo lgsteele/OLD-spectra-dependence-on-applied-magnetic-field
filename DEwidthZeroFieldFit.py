@@ -25,12 +25,14 @@ def de(freq,signal,zfArray): # determines D, E, and width from zero-field data
 ######################################
 # Fitting with Lorentzian
 ######################################
-    p0=[np.amax(signal)*7e6,np.amax(signal)*7e6,\
+    a = np.amax(signal)*7e6
+    p0=[a,a,\
         zfArray[0],zfArray[1],zfArray[2],zfArray[3]]
-    yguess = lor(freq,np.amax(signal)*7e6,np.amax(signal)*7e6,\
+    yguess = lor(freq,a,a,\
         zfArray[0],zfArray[1],zfArray[2],zfArray[3])
     coeffs, matcov = curve_fit(lor, freq, signal, p0,\
-                    bounds=(0,3e9))
+##                    bounds=((2.4e9,1e5,1e5,-10),(3.2e9,1e7,1e7,1e6)))
+                    bounds=((1e6,1e6,2.6e9,1e5,1e5,0),(5e7,5e7,3.0e9,6e6,6e6,10)))
     yStdErr = np.sqrt(np.diag(matcov)) # compute standard errors of fit params
 ##    print yStdErr
     yfit = lor(freq,coeffs[0],coeffs[1],coeffs[2],\

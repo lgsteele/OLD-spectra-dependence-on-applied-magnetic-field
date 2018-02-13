@@ -33,7 +33,7 @@ def NVspectrafromB(freq,zf,amp,Bx,By,Bz):
 
 
 # Next, generate spectra for various values of B
-BArray = np.arange(1e-7,2.5e-4,50e-7)
+BArray = np.arange(1e-7,2.5e-4,10e-7)
 spectrax = np.zeros(( len(BArray),len(freq)+1 ))
 spectrax[:,0] = np.copy(BArray)
 spectraz = np.copy(spectrax)
@@ -43,6 +43,7 @@ ewx = np.zeros((len(spectrax),8))
 ewz = np.zeros((len(spectrax),8))
 ##ewxy = np.zeros((len(spectrax),8))
 ewxz = np.zeros((len(spectrax),8))
+
 for i in range(0,len(spectrax),1):
     spectrax[i,1:] = NVspectrafromB(freq,zf,amp,BArray[i],0,0)
     spectraz[i,1:] = NVspectrafromB(freq,zf,amp,0,0,BArray[i])
@@ -102,7 +103,7 @@ ax.set_xlabel('Freq (GHz)')
 ax.set_ylabel('B (uT)')
 
 ax = fig.add_subplot(2,3,4)
-ax.plot(ewx[:,1]/1e6,spectrax[:,0]*1e6,'r-',\NVspe
+ax.plot(ewx[:,1]/1e6,spectrax[:,0]*1e6,'r-',\
         ewz[:,1]/1e6,spectraz[:,0]*1e6,'g-',\
         ewxz[:,1]/1e6,spectraxz[:,0]*1e6,'b-')
 ax.set_title('Splitting (rBx,gBz,bBxz)')
