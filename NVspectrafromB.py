@@ -102,7 +102,7 @@ ax.set_xlabel('Freq (GHz)')
 ax.set_ylabel('B (uT)')
 
 ax = fig.add_subplot(2,3,4)
-ax.plot(ewx[:,1]/1e6,spectrax[:,0]*1e6,'r-',\
+ax.plot(ewx[:,1]/1e6,spectrax[:,0]*1e6,'r-',\NVspe
         ewz[:,1]/1e6,spectraz[:,0]*1e6,'g-',\
         ewxz[:,1]/1e6,spectraxz[:,0]*1e6,'b-')
 ax.set_title('Splitting (rBx,gBz,bBxz)')
