@@ -39,10 +39,12 @@ spectrax[:,0] = np.copy(BArray)
 spectraz = np.copy(spectrax)
 spectraxy = np.copy(spectrax)
 spectraxz = np.copy(spectrax)
+spectraxyz = np.copy(spectrax)
 ewx = np.zeros((len(spectrax),8))
 ewz = np.zeros((len(spectrax),8))
 ##ewxy = np.zeros((len(spectrax),8))
 ewxz = np.zeros((len(spectrax),8))
+ewxyz = np.zeros((len(spectrax),8))
 
 for i in range(0,len(spectrax),1):
     spectrax[i,1:] = NVspectrafromB(freq,zf,amp,BArray[i],0,0)
@@ -51,10 +53,15 @@ for i in range(0,len(spectrax),1):
 ##                                     BArray[i]/np.sqrt(2),BArray[i]/np.sqrt(2),0)
     spectraxz[i,1:] = NVspectrafromB(freq,zf,amp,\
                                      BArray[i]/np.sqrt(2),0,BArray[i]/np.sqrt(2))
+    spectraxyz[i,1:] = NVspectrafromB(freq,zf,amp,\
+                                     BArray[i]/np.sqrt(3),\
+                                      BArray[i]/np.sqrt(3),\
+                                      BArray[i]/np.sqrt(3))
     ewx[i,:] = np.copy(de(freq,spectrax[i,1:],zf))
     ewz[i,:] = np.copy(de(freq,spectraz[i,1:],zf))
 ##    ewxy[i,:] = np.copy(de(freq,spectraxy[i,1:],zf))
     ewxz[i,:] = np.copy(de(freq,spectraxz[i,1:],zf))
+    ewxyz[i,:] = np.copy(de(freq,spectraxyz[i,1:],zf))
 ##print ewxy[:,1]
 ##print len(spectrax)
 ##print len(spectraz)
@@ -103,22 +110,37 @@ ax.set_xlabel('Freq (GHz)')
 ax.set_ylabel('B (uT)')
 
 ax = fig.add_subplot(2,3,4)
-ax.plot(ewx[:,1]/1e6,spectrax[:,0]*1e6,'r-',\
-        ewz[:,1]/1e6,spectraz[:,0]*1e6,'g-',\
-        ewxz[:,1]/1e6,spectraxz[:,0]*1e6,'b-')
-ax.set_title('Splitting (rBx,gBz,bBxz)')
-ax.set_xlabel('Freq (MHz)')
+X = freq/1e9
+##Y = spectraxy[:,0]*1e6
+Y = spectraxyz[:,0]*1e6
+X,Y = np.meshgrid(X,Y)
+##Z = spectraxy[:,1:]
+Z = spectraxyz[:,1:]
+plt.contourf(X,Y,Z,100,cmap='Greys')
+plt.colorbar()
+ax.set_title('Bxyz')
+ax.set_xlabel('Freq (GHz)')
 ax.set_ylabel('B (uT)')
 
 ax = fig.add_subplot(2,3,5)
-ax.plot(ewx[:,2]/1e6,spectrax[:,0]*1e6,'r-',\
-        ewz[:,2]/1e6,spectraz[:,0]*1e6,'g-',\
-        ewxz[:,2]/1e6,spectraxz[:,0]*1e6,'b-')
-ax.set_title('Width (rBx,gBz,bBxz)')
+ax.plot(ewx[:,1]/1e6,spectrax[:,0]*1e6,'r-',\
+        ewz[:,1]/1e6,spectraz[:,0]*1e6,'g-',\
+        ewxz[:,1]/1e6,spectraxz[:,0]*1e6,'b-',\
+        ewxyz[:,1]/1e6,spectraxyz[:,0]*1e6,'k-')
+ax.set_title('Splitting')
 ax.set_xlabel('Freq (MHz)')
 ax.set_ylabel('B (uT)')
 
-plt.subplots_adjust(wspace=.2,hspace=.6)
+ax = fig.add_subplot(2,3,6)
+ax.plot(ewx[:,2]/1e6,spectrax[:,0]*1e6,'r-',\
+        ewz[:,2]/1e6,spectraz[:,0]*1e6,'g-',\
+        ewxz[:,2]/1e6,spectraxz[:,0]*1e6,'b-',\
+        ewxyz[:,2]/1e6,spectraxyz[:,0]*1e6,'k-')
+ax.set_title('Width')
+ax.set_xlabel('Freq (MHz)')
+ax.set_ylabel('B (uT)')
+
+plt.subplots_adjust(wspace=.2,hspace=1)
 plt.draw()
 plt.show()
 
