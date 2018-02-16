@@ -6,12 +6,12 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import datetime
 
-from NVeigenvalues import eigenvalues
-from lor8 import lor8
+##from NVeigenvalues import eigenvalues
+##from lor8 import lor8
 from DEwidthZeroFieldFit import de
 
 
-# Generate Bxyz array from theta, phi, a Bmag
+# Generate phase space array of theta, phi, and Bmag
 def s2c(theta,phi,Bmag):
     thetaphi = np.array([[x0,y0] for x0 in theta \
                       for y0 in phi])
@@ -19,13 +19,11 @@ def s2c(theta,phi,Bmag):
     xyz = (phi*np.array([np.cos(phi)*np.sin(theta),\
                np.sin(phi)*np.sin(theta),\
                np.cos(theta)])).transpose()
-    Bxyztmp = (Bmag*xyz).reshape(2,4,1,3)
+    Bxyztmp = (Bmag*xyz).reshape(len(Bmag),len(thetaphi),1,3)
     return Bxyztmp
 
 
-# Calculate the eigenvalues for array of B-field
-# magnitudes and orientations as defined by
-# theta, phi, and Bmag
+# Calculate the eigenvalues for phase space
 def eigenvalues(Bxyz):
     Bxyztmp = np.copy(Bxyz)
     base = np.ones((len(Bxyztmp)*len(Bxyztmp[0]),1)).\
@@ -79,20 +77,53 @@ def eigenvalues(Bxyz):
     evals = np.dstack([f1,f2,f3,f4,f5,f6,f7,f8])
     evals = np.sort(evals,axis=2).reshape(len(Bxyztmp),\
                                 len(Bxyztmp[0]),1,8)
-    return np.concatenate((Bxyztmp,evals),axis=3)
+##    return np.concatenate((Bxyztmp,evals),axis=3)
+    return evals
 
-############################################
-# Next is to generate spectra for each Bxyz...
-def NVspectrafromB(freq,zf,amp,Bx,By,Bz):
-    # Define relevant arrays
-    # Calculate eigenvalues for given Bx,By,Bz
-    ev = eigenvalues(zf[0:3],[Bx,By,Bz])
-    # Generate NV- spectra
-    spectra = lor8(freq,zf,amp,ev)
-##    plt.plot(freq,spectra)
-##    plt.show()
-    return spectra
-##NVspectrafromB()
+
+# Generate spectra in phase space
+def lor8(freq,zf,ev):
+    evtmp = np.copy(ev)
+    base = np.ones((len(evtmp)*len(evtmp[0]),1)).\
+           reshape(len(evtmp),len(evtmp[0]),1,1)
+    freq = freq*base
+    ev1 = (ev[:,:,:,0].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev2 = (ev[:,:,:,1].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev3 = (ev[:,:,:,2].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev4 = (ev[:,:,:,3].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev5 = (ev[:,:,:,4].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev6 = (ev[:,:,:,5].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev7 = (ev[:,:,:,6].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    ev8 = (ev[:,:,:,7].reshape(len(evtmp),len(evtmp[0]),1,1))\
+            *base
+    lor1 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev1)**2+ zf[2]**2)))
+    lor2 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev2)**2+ zf[2]**2)))
+    lor3 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev3)**2+ zf[2]**2)))
+    lor4 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev4)**2+ zf[2]**2)))
+    lor5 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev5)**2+ zf[2]**2)))
+    lor6 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev6)**2+ zf[2]**2)))
+    lor7 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev7)**2+ zf[2]**2)))
+    lor8 = 1e7*((zf[2]**2)/\
+            (np.pi*zf[2]*((freq-ev8)**2+ zf[2]**2)))
+    return lor1+lor2+lor3+lor4+lor5+lor6+lor7+lor8
+
+
+# Fit spectra and return splitting and widths
+
 
 
 ############################################
@@ -102,16 +133,22 @@ def NVspectrafromB(freq,zf,amp,Bx,By,Bz):
 ##phi = np.linspace(0.,np.pi/2.,num=2)
 theta = np.array([1,2])
 phi = np.array([1,2])
-Bmag = np.linspace(1e-7,1e-6,2).reshape(2,1,1)
+Bmag = np.linspace(1e-7,1e-6,2)
+Bmag = Bmag.reshape(len(Bmag),1,1)
 Bxyz = s2c(theta,phi,Bmag)
 ev = eigenvalues(Bxyz)
-print ev
 
 ############################################
-# Define frequency range for generating spectra
+# Define frequency range and zf for generating spectra
 ############################################
 freq = np.linspace(2.77e9,2.97e9,1e6)
-
+zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+spectra = lor8(freq,zf,ev)
+print freq.shape
+print spectra.shape
+plt.plot(freq,spectra[0,0,0,:])
+plt.show()
+##NVspectrafromB(freq,ev)
 
 
 ############################################
