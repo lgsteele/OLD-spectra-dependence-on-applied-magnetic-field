@@ -6,9 +6,7 @@ from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import datetime
 
-##from NVeigenvalues import eigenvalues
-##from lor8 import lor8
-from DEwidthZeroFieldFit import de
+##from DEwidthZeroFieldFit import de
 
 
 # Generate phase space array of theta, phi, and Bmag
@@ -16,7 +14,7 @@ def s2c(theta,phi,Bmag):
     thetaphi = np.array([[x0,y0] for x0 in theta \
                       for y0 in phi])
     theta,phi = thetaphi.transpose()
-    xyz = (phi*np.array([np.cos(phi)*np.sin(theta),\
+    xyz = (np.array([np.cos(phi)*np.sin(theta),\
                np.sin(phi)*np.sin(theta),\
                np.cos(theta)])).transpose()
     Bxyztmp = (Bmag*xyz).reshape(len(Bmag),len(thetaphi),1,3)
@@ -62,9 +60,13 @@ def eigenvalues(Bxyz):
                                         len(Bxyztmp[0]),1,1)*sy) + \
                             (Bxyztmp[:,:,:,2].reshape(len(Bxyztmp),\
                                         len(Bxyztmp[0]),1,1)*sz))
+    # NOTE: The eigh function sorts the eigenvalues in increasing order
+    # this leads to an error in the calculation of the splittings:
+    # it is not currently possible to distinguish between B parallel to NV
+    # and B antiparallel to NV
     w, v = LA.eigh(zfs1+strain1+zeeman)
-    f1 = (abs(w[:,:,0])+abs(w[:,:,1]))
-    f2 = (abs(w[:,:,0])+abs(w[:,:,2]))
+    f1 = w[:,:,1] - w[:,:,0]
+    f2 = w[:,:,2] - w[:,:,0]
     w, v = LA.eigh(zfs2+strain2+zeeman)
     f3 = (abs(w[:,:,0])+abs(w[:,:,1]))
     f4 = (abs(w[:,:,0])+abs(w[:,:,2]))
@@ -74,11 +76,20 @@ def eigenvalues(Bxyz):
     w, v = LA.eigh(zfs4+strain4+zeeman)
     f7 = (abs(w[:,:,0])+abs(w[:,:,1]))
     f8 = (abs(w[:,:,0])+abs(w[:,:,2]))
-    evals = np.dstack([f1,f2,f3,f4,f5,f6,f7,f8])
-    evals = np.sort(evals,axis=2).reshape(len(Bxyztmp),\
+    evals = np.dstack([f1,f2,f3,f4,f5,f6,f7,f8]).reshape(len(Bxyztmp),\
                                 len(Bxyztmp[0]),1,8)
+##    evals = np.sort(evals,axis=2).reshape(len(Bxyztmp),\
+##                                len(Bxyztmp[0]),1,8)
 ##    return np.concatenate((Bxyztmp,evals),axis=3)
     return evals
+
+def splittings(evals):
+    base = np.ones((len(evals),len(evals[0]),1,4))
+    base[:,:,:,0] = evals[:,:,:,1] - evals[:,:,:,0]
+    base[:,:,:,1] = evals[:,:,:,3] - evals[:,:,:,2]
+    base[:,:,:,2] = evals[:,:,:,5] - evals[:,:,:,4]
+    base[:,:,:,3] = evals[:,:,:,7] - evals[:,:,:,6]
+    return base
 
 
 # Generate spectra in phase space
@@ -122,21 +133,76 @@ def lor8(freq,zf,ev):
     return lor1+lor2+lor3+lor4+lor5+lor6+lor7+lor8
 
 
-# Fit spectra and return splitting and widths
 
 
 
 ############################################
 # Define theta, phi, Bmag arrays to calculate eigenvalues
 ############################################
-##theta = np.linspace(0.01,np.pi/2.,num=2)
-##phi = np.linspace(0.,np.pi/2.,num=2)
-theta = np.array([1,2])
-phi = np.array([1,2])
-Bmag = np.linspace(1e-7,1e-6,2)
+theta = np.linspace(0.00,np.pi,num=50)
+phi = np.linspace(0,2*np.pi,num=50)
+##theta = np.array([0,np.pi/2])
+##phi = np.array([0])
+##Bmag = np.linspace(0,150e-6,2)
+Bmag = np.array([150e-6])
 Bmag = Bmag.reshape(len(Bmag),1,1)
 Bxyz = s2c(theta,phi,Bmag)
 ev = eigenvalues(Bxyz)
+
+############################################
+# Calculate and plot splittings as a function of theta and phi
+############################################
+s = splittings(ev)
+
+fig = plt.figure(figsize=plt.figaspect(1.))
+
+ax = fig.add_subplot(221)
+X = np.degrees(phi)
+Y = np.degrees(theta)
+X, Y = np.meshgrid(X,Y)
+Z = s[:,:,:,0].reshape(len(theta),len(phi))
+plt.contourf(X,Y,Z,100)
+plt.colorbar()
+ax.set_title('NV-axis: (1,0,1)')
+ax.set_xlabel('phi (degrees)')
+ax.set_ylabel('theta (degrees)')
+
+ax = fig.add_subplot(222)
+X = np.degrees(phi)
+Y = np.degrees(theta)
+X, Y = np.meshgrid(X,Y)
+Z = s[:,:,:,1].reshape(len(theta),len(phi))
+plt.contourf(X,Y,Z,100)
+plt.colorbar()
+ax.set_title('NV-axis: (0,-1,-1)')
+ax.set_xlabel('phi (degrees)')
+ax.set_ylabel('theta (degrees)')
+
+ax = fig.add_subplot(223)
+X = np.degrees(phi)
+Y = np.degrees(theta)
+X, Y = np.meshgrid(X,Y)
+Z = s[:,:,:,2].reshape(len(theta),len(phi))
+plt.contourf(X,Y,Z,100)
+plt.colorbar()
+ax.set_title('NV-axis: (0,1,1)')
+ax.set_xlabel('phi (degrees)')
+ax.set_ylabel('theta (degrees)')
+
+ax = fig.add_subplot(224)
+X = np.degrees(phi)
+Y = np.degrees(theta)
+X, Y = np.meshgrid(X,Y)
+Z = s[:,:,:,3].reshape(len(theta),len(phi))
+plt.contourf(X,Y,Z,100)
+plt.colorbar()
+ax.set_title('NV-axis: (-1,0,-1)')
+ax.set_xlabel('phi (degrees)')
+ax.set_ylabel('theta (degrees)')
+
+plt.subplots_adjust(wspace=.3,hspace=.5)
+plt.draw
+plt.show()
 
 ############################################
 # Define frequency range and zf for generating spectra
@@ -144,10 +210,10 @@ ev = eigenvalues(Bxyz)
 freq = np.linspace(2.77e9,2.97e9,1e6)
 zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
 spectra = lor8(freq,zf,ev)
-print freq.shape
-print spectra.shape
-plt.plot(freq,spectra[0,0,0,:])
-plt.show()
+##print freq.shape
+##print spectra.shape
+##plt.plot(freq,spectra[0,0,0,:])
+##plt.show()
 ##NVspectrafromB(freq,ev)
 
 
