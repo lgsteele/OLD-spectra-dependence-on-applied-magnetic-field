@@ -7,8 +7,14 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import datetime
 from scipy.optimize import curve_fit # used in swth function
 
-##from DEwidthZeroFieldFit import de
-
+# This code simulates:
+# (1) How the splitting of the 4 NV-center orientations depend on the direction of a 
+# 150uT magnetic field (see plotsplittings)
+# and
+# (2) How the splitting and width of a two-lorentzian fit depend on the direction
+# of a 200uT magnetic field (see swth)
+# Note: the swth simulation can accomodate an array of magnetic field magnitudes
+# in addition to theta and phi values, but it takes A LOT time
 
 # Generate phase space array of theta, phi, and Bmag
 def s2c(theta,phi,Bmag):
@@ -234,7 +240,6 @@ def plotsplittings(phi,theta,zf):
 
 ############################################
 # Calculate splitting and width as a function of theta and phi
-# for a single magnetic field strength
 ############################################
 def swth(phi,theta,zf,freq):
     print datetime.datetime.now()
@@ -280,25 +285,9 @@ def swth(phi,theta,zf,freq):
 ##        plt.plot(freq[i],spectra[i,:],'r-',freq[i],yfit,'b--')
 ##        plt.show()
     np.savetxt('coeffs.txt',coeffs,delimiter=', ')
-##    np.savetxt('spectra.txt',spectra,delimiter=', ')
 
-##    yfit1 = lor(freq[0],coeffs[0,0],coeffs[0,1],coeffs[0,2],coeffs[0,3],\
-##                coeffs[0,4],coeffs[0,5])
-##    plt.plot(freq[0],spectra[0,:],'r-',freq[0],yfit1,'b-')
-##    plt.show()
-##    yfit2 = lor(freq[0],coeffs[1,0],coeffs[1,1],coeffs[1,2],coeffs[1,3],\
-##                coeffs[1,4],coeffs[1,5])
-##    plt.plot(freq[0],spectra[1,:],'r-',freq[0],yfit2,'b-')
-##    plt.show()
-##    yfit3 = lor(freq[0],coeffs[2,0],coeffs[2,1],coeffs[2,2],coeffs[2,3],\
-##                coeffs[2,4],coeffs[2,5])
-##    plt.plot(freq[0],spectra[2,:],'r-',freq[0],yfit3,'b-')
-##    plt.show()
-##    yfit4 = lor(freq[0],coeffs[3,0],coeffs[3,1],coeffs[3,2],coeffs[3,3],\
-##                coeffs[3,4],coeffs[3,5])
-##    plt.plot(freq[0],spectra[3,:],'r-',freq[0],yfit4,'b-')
-##    plt.show()
-
+    
+    
 freq = np.linspace(2.77e9,2.97e9,1e6)
 zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
 theta = np.linspace(0.001,np.pi,num=13)
