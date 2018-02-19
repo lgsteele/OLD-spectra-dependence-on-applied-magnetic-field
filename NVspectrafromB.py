@@ -9,6 +9,12 @@ from NVeigenvalues import eigenvalues
 from lor8 import lor8
 from DEwidthZeroFieldFit import de
 
+# This code solves for the splitting a width of a two-lorentzian fit
+# of NV-spectra for a few orientations of the B-field
+# For a more robust account on how the splitting and width depend
+# on field-orientation, see smallBfittingtable
+
+
 # Define variable arrays
 zf = np.array([2.87e9,3.6e6,2.6e6,0,\
                 0,0,0,0])
