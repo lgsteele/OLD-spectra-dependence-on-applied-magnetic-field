@@ -5,6 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import datetime
+from scipy.optimize import curve_fit # used in swth function
 
 ##from DEwidthZeroFieldFit import de
 
@@ -22,11 +23,10 @@ def s2c(theta,phi,Bmag):
 
 
 # Calculate the eigenvalues for phase space
-def eigenvalues(Bxyz):
+def eigenvalues(Bxyz,zf):
     Bxyztmp = np.copy(Bxyz)
     base = np.ones((len(Bxyztmp)*len(Bxyztmp[0]),1)).\
            reshape(len(Bxyztmp),len(Bxyztmp[0]),1,1)
-    zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
     zfs1 = zf[0]*(base*np.array([[0,.3333,.3333],\
                     [.3333,0,-.3333],\
                     [.3333,-.3333,0]]))
@@ -91,7 +91,6 @@ def splittings(evals):
     base[:,:,:,3] = evals[:,:,:,7] - evals[:,:,:,6]
     return base
 
-
 # Generate spectra in phase space
 def lor8(freq,zf,ev):
     evtmp = np.copy(ev)
@@ -139,89 +138,206 @@ def lor8(freq,zf,ev):
 ############################################
 # Define theta, phi, Bmag arrays to calculate eigenvalues
 ############################################
-theta = np.linspace(0.00,np.pi,num=50)
-phi = np.linspace(0,2*np.pi,num=50)
-##theta = np.array([0,np.pi/2])
-##phi = np.array([0])
-##Bmag = np.linspace(0,150e-6,2)
-Bmag = np.array([150e-6])
-Bmag = Bmag.reshape(len(Bmag),1,1)
-Bxyz = s2c(theta,phi,Bmag)
-ev = eigenvalues(Bxyz)
+##theta = np.linspace(0.00,np.pi,num=40)
+##phi = np.linspace(0,2*np.pi,num=40)
+####theta = np.array([0,np.pi/2])
+####phi = np.array([0])
+####Bmag = np.linspace(0,150e-6,2)
+##Bmag = np.array([150e-6])
+##Bmag = Bmag.reshape(len(Bmag),1,1)
+##Bxyz = s2c(theta,phi,Bmag)
+##ev = eigenvalues(Bxyz)
 
 ############################################
-# Calculate and plot splittings as a function of theta and phi
+# Calculate and plot NV splittings as a function of theta and phi
+# Requires single value for Bmag (i.e.: Bmag = np.array([150e-6]))
 ############################################
-s = splittings(ev)
+def plotsplittings(phi,theta,zf):
+    Bmag = np.array([150e-6])
+    Bmag = Bmag.reshape(len(Bmag),1,1)
+    Bxyz = s2c(theta,phi,Bmag)
+    ev = eigenvalues(Bxyz,zf)
+    s = splittings(ev)
 
+    fig = plt.figure(figsize=plt.figaspect(1.))
+
+    ax = fig.add_subplot(221)
+    X = np.degrees(phi)
+    Y = np.degrees(theta)
+    X, Y = np.meshgrid(X,Y)
+    Z = s[:,:,:,0].reshape(len(theta),len(phi))
+    plt.contourf(X,Y,Z,100)
+    plt.colorbar()
+    ax.set_title('NV-axis: (1,0,1)')
+    ax.set_xlabel('phi (degrees)')
+    ax.set_ylabel('theta (degrees)')
+
+    ax = fig.add_subplot(222)
+    X = np.degrees(phi)
+    Y = np.degrees(theta)
+    X, Y = np.meshgrid(X,Y)
+    Z = s[:,:,:,1].reshape(len(theta),len(phi))
+    plt.contourf(X,Y,Z,100)
+    plt.colorbar()
+    ax.set_title('NV-axis: (0,-1,-1)')
+    ax.set_xlabel('phi (degrees)')
+    ax.set_ylabel('theta (degrees)')
+
+    ax = fig.add_subplot(223)
+    X = np.degrees(phi)
+    Y = np.degrees(theta)
+    X, Y = np.meshgrid(X,Y)
+    Z = s[:,:,:,2].reshape(len(theta),len(phi))
+    plt.contourf(X,Y,Z,100)
+    plt.colorbar()
+    ax.set_title('NV-axis: (0,1,1)')
+    ax.set_xlabel('phi (degrees)')
+    ax.set_ylabel('theta (degrees)')
+
+    ax = fig.add_subplot(224)
+    X = np.degrees(phi)
+    Y = np.degrees(theta)
+    X, Y = np.meshgrid(X,Y)
+    Z = s[:,:,:,3].reshape(len(theta),len(phi))
+    plt.contourf(X,Y,Z,100)
+    plt.colorbar()
+    ax.set_title('NV-axis: (-1,0,-1)')
+    ax.set_xlabel('phi (degrees)')
+    ax.set_ylabel('theta (degrees)')
+
+    plt.subplots_adjust(wspace=.3,hspace=.5)
+    plt.draw
+    plt.show()
+##zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+##theta = np.linspace(0.,np.pi,num=100)
+##phi = np.linspace(0.001,2*np.pi,num=100)
+##plotsplittings(phi,theta,zf)
+
+
+
+############################################
+# Current problem to solve:
+# How to characterize small field spectra from splitting and width?
+# hrm...
+# the splitting places a range on the magnetic field magnitude
+# if the width has changed, this Bmag is not Bz
+# plug in B corresponding to fitting, rotate this Bmag, and fit to data?
+############################################
+##freq = np.linspace(2.77e9,2.97e9,1e6)
+##zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+##spectra = lor8(freq,zf,ev)
+##print freq.shape
+##print spectra.shape
+##plt.plot(freq,spectra[0,0,0,:])
+##plt.show()
+
+
+############################################
+# Calculate splitting and width as a function of theta and phi
+# for a single magnetic field strength
+############################################
+def swth(phi,theta,zf,freq):
+    print datetime.datetime.now()
+    Bmag = np.array([200e-6])
+    Bmag = Bmag.reshape(len(Bmag),1,1)
+    Bxyz = s2c(theta,phi,Bmag)
+    ev = eigenvalues(Bxyz,zf)
+    spectra = lor8(freq,zf,ev)
+    def lor(freq,a1,a2,D,E,width,offset):
+        lor1 = a1*((width**2)/(np.pi*width*((freq-(D+E))**2 + width**2)))
+        lor2 = a2*((width**2)/(np.pi*width*((freq-(D-E))**2 + width**2)))
+        return lor1+lor2 + offset
+    a = (np.amax(spectra,axis=3)*7e6).reshape((len(Bxyz)*len(Bxyz[0]),1))
+    base = a/a
+    zfcentral = base*zf[0]
+    zfsplitting = base*zf[1]
+    zfwidth = base*zf[2]
+    zfoffset = base*zf[3]
+    freq = (base*freq)
+    spectra = spectra.reshape((len(Bxyz)*len(Bxyz[0]),len(freq[1])))
+    p0 = np.concatenate((a,a,zfcentral,zfsplitting,zfwidth,zfoffset),axis=1)
+    print freq.shape
+    print spectra.shape
+    print datetime.datetime.now()
+##    print lor(freq,a,a,zfcentral,zfsplitting,zfwidth,zfoffset).shape
+##    print a.shape
+##    print zfcentral.shape
+##    print zfsplitting.shape
+##    print zfwidth.shape
+##    print zfoffset.shape
+##    print p0.shape
+    coeffs = np.ones((len(Bxyz)*len(Bxyz[0]),len(p0[0])))
+    print coeffs.shape
+    thetaphi = np.array([[x0,y0] for x0 in theta \
+                      for y0 in phi])
+    for i in range(0,len(coeffs),1):
+        print i
+##        print thetaphi[i]
+        coeffs[i], matcov = curve_fit(lor,freq[i],spectra[i],p0[i])
+        yfit = lor(freq[i],coeffs[i,0],coeffs[i,1],coeffs[i,2],\
+                   coeffs[i,3],coeffs[i,4],coeffs[i,5])
+##        print coeffs[i]
+##        plt.plot(freq[i],spectra[i,:],'r-',freq[i],yfit,'b--')
+##        plt.show()
+    np.savetxt('coeffs.txt',coeffs,delimiter=', ')
+##    np.savetxt('spectra.txt',spectra,delimiter=', ')
+
+##    yfit1 = lor(freq[0],coeffs[0,0],coeffs[0,1],coeffs[0,2],coeffs[0,3],\
+##                coeffs[0,4],coeffs[0,5])
+##    plt.plot(freq[0],spectra[0,:],'r-',freq[0],yfit1,'b-')
+##    plt.show()
+##    yfit2 = lor(freq[0],coeffs[1,0],coeffs[1,1],coeffs[1,2],coeffs[1,3],\
+##                coeffs[1,4],coeffs[1,5])
+##    plt.plot(freq[0],spectra[1,:],'r-',freq[0],yfit2,'b-')
+##    plt.show()
+##    yfit3 = lor(freq[0],coeffs[2,0],coeffs[2,1],coeffs[2,2],coeffs[2,3],\
+##                coeffs[2,4],coeffs[2,5])
+##    plt.plot(freq[0],spectra[2,:],'r-',freq[0],yfit3,'b-')
+##    plt.show()
+##    yfit4 = lor(freq[0],coeffs[3,0],coeffs[3,1],coeffs[3,2],coeffs[3,3],\
+##                coeffs[3,4],coeffs[3,5])
+##    plt.plot(freq[0],spectra[3,:],'r-',freq[0],yfit4,'b-')
+##    plt.show()
+
+freq = np.linspace(2.77e9,2.97e9,1e6)
+zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
+theta = np.linspace(0.001,np.pi,num=13)
+phi = np.linspace(0.001,2*np.pi,num=17)
+##swth(phi,theta,zf,freq)
+
+a1,a2,zfcentral,zfsplitting,zfwidth,zfoffset =\
+    np.loadtxt('coeffs.txt',delimiter=', ',unpack=True)
+
+print zfsplitting.shape
+print theta.shape
+print phi.shape
 fig = plt.figure(figsize=plt.figaspect(1.))
 
-ax = fig.add_subplot(221)
+ax = fig.add_subplot(211)
 X = np.degrees(phi)
 Y = np.degrees(theta)
 X, Y = np.meshgrid(X,Y)
-Z = s[:,:,:,0].reshape(len(theta),len(phi))
+Z = zfsplitting.reshape(len(theta),len(phi))
 plt.contourf(X,Y,Z,100)
 plt.colorbar()
-ax.set_title('NV-axis: (1,0,1)')
+ax.set_title('Splitting')
 ax.set_xlabel('phi (degrees)')
 ax.set_ylabel('theta (degrees)')
 
-ax = fig.add_subplot(222)
+ax = fig.add_subplot(212)
 X = np.degrees(phi)
 Y = np.degrees(theta)
 X, Y = np.meshgrid(X,Y)
-Z = s[:,:,:,1].reshape(len(theta),len(phi))
+Z = zfwidth.reshape(len(theta),len(phi))
 plt.contourf(X,Y,Z,100)
 plt.colorbar()
-ax.set_title('NV-axis: (0,-1,-1)')
-ax.set_xlabel('phi (degrees)')
-ax.set_ylabel('theta (degrees)')
-
-ax = fig.add_subplot(223)
-X = np.degrees(phi)
-Y = np.degrees(theta)
-X, Y = np.meshgrid(X,Y)
-Z = s[:,:,:,2].reshape(len(theta),len(phi))
-plt.contourf(X,Y,Z,100)
-plt.colorbar()
-ax.set_title('NV-axis: (0,1,1)')
-ax.set_xlabel('phi (degrees)')
-ax.set_ylabel('theta (degrees)')
-
-ax = fig.add_subplot(224)
-X = np.degrees(phi)
-Y = np.degrees(theta)
-X, Y = np.meshgrid(X,Y)
-Z = s[:,:,:,3].reshape(len(theta),len(phi))
-plt.contourf(X,Y,Z,100)
-plt.colorbar()
-ax.set_title('NV-axis: (-1,0,-1)')
+ax.set_title('Width')
 ax.set_xlabel('phi (degrees)')
 ax.set_ylabel('theta (degrees)')
 
 plt.subplots_adjust(wspace=.3,hspace=.5)
 plt.draw
 plt.show()
-
-############################################
-# Define frequency range and zf for generating spectra
-############################################
-freq = np.linspace(2.77e9,2.97e9,1e6)
-zf = np.array([2.87e9,3.6e6,2.6e6,0,0,0,0,0])
-spectra = lor8(freq,zf,ev)
-##print freq.shape
-##print spectra.shape
-##plt.plot(freq,spectra[0,0,0,:])
-##plt.show()
-##NVspectrafromB(freq,ev)
-
-
-############################################
-############################################
-
-
-
 
 
 
